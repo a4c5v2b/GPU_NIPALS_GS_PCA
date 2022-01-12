@@ -1,1 +1,10 @@
 numpy
+sklearn
+pycuda
+
+[gpu]
+pycuda
+
+[testing]
+sklearn
+tqdm

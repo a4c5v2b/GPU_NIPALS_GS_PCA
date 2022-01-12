@@ -1,0 +1,10 @@
+README.md
+setup.py
+nipals/NIPALS.py
+nipals/__init__.py
+nipals/kernels.py
+pca_gpu.egg-info/PKG-INFO
+pca_gpu.egg-info/SOURCES.txt
+pca_gpu.egg-info/dependency_links.txt
+pca_gpu.egg-info/requires.txt
+pca_gpu.egg-info/top_level.txt
