@@ -1,7 +1,7 @@
 import pycuda.driver as cuda
 import pycuda.autoinit
 from pycuda.compiler import SourceModule
-import pycuda.gpuarray as gpuarray
+from pycuda import gpuarray
 from pycuda import cumath
 import numpy as np
 from time import time
@@ -19,7 +19,7 @@ def GS_PCA_CPU(X, n, epsilon):
         V[:, k] = R[:, k]
         while True:
             # multiply transpose
-            U[:, k] = R.T@V[:, k]
+            U[:, k] = R.T@V[:, k]  # @ is dot product/ matmul
             if k > 0:
                 # NOTE :
                 # multiply transpose + slicing numpy
@@ -181,3 +181,60 @@ def GS_PCA_GPU(X, n, epsilon, maxiter=100):
     return T, P, R, Lambda, vectL
 
 
+
+import torchvision
+import torch
+from torchvision import datasets, transforms
+from torch.utils.data import ConcatDataset, DataLoader, Subset
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+
+
+train_tfm = transforms.Compose([
+    # Resize the image into a fixed shape (height = width = 128)
+    transforms.Resize((128, 128)),
+    # You may add some transforms here.
+    # ToTensor() should be the last one of the transforms.
+    transforms.ToTensor(),
+])
+
+# We don't need augmentations in testing and validation.
+# All we need here is to resize the PIL image and transform it into Tensor.
+test_tfm = transforms.Compose([
+    transforms.Resize((128, 128)),
+    transforms.ToTensor(),
+])
+
+
+
+train_set = datasets.MNIST('/MNIST/', train=True, download=True)
+
+test_set = datasets.MNIST('/MNIST/', train=False, download=True)
+
+train_images = train_set.train_data.unsqueeze(-1).numpy() / 255
+train_labels = train_set.train_labels.numpy()
+test_images = test_set.test_data.unsqueeze(-1).numpy() / 255
+test_labels = test_set.test_labels.numpy()
+
+class_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+
+
+
+train_set = datasets.MNIST('./data', train=True, download=True)
+test_set = datasets.MNIST('./data', train=False, download=True)
+
+train_set = train_set.data.numpy()
+test_set = test_set.data.numpy()
+
+train_set = np.reshape(train_set,(train_set.shape[0],-1))/255
+test_set = np.reshape(test_set,(test_set.shape[0],-1))/255
+scaler = StandardScaler()
+scaler.fit(train_set)
+
+
+
+T, P, R, Lambda, vectL =  GS_PCA_CPU(train_set[0:1],10,1)
+
+
+#T, P, R, Lambda, vectL =  GS_PCA_GPU(train_set[0:10],20,1e-3)
