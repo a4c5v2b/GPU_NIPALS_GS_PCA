@@ -29,8 +29,10 @@ def GS_PCA_CPU(X, n, epsilon):
                 U[:, k] = U[:, k] - U[:, n-k:]@A
 
             L2 = np.linalg.norm(U[:, k])
-            # normalize
-            U[:, k] = U[:, k]/L2
+
+            if L2 != 0:
+                # normalize
+                U[:, k] = U[:, k]/L2
             # multiply
             V[:, k] = R@U[:, k]
             if k > 0:
@@ -38,11 +40,13 @@ def GS_PCA_CPU(X, n, epsilon):
                 B = V[:, :k].T @ V[:, k]
                 # multiply + gpu op
                 V[:, k] = V[:, k] - V[:, :k]@B
+
             # get eigen vector
             Lk = np.linalg.norm(V[:, k])
-            
-            # gpuarray op 
-            V[:, k] = V[:, k]/Lk
+
+            if Lk != 0:
+                # gpuarray op
+                V[:, k] = V[:, k]/Lk
             if np.abs(Lk-mu) < epsilon:
                 break
             mu = Lk
@@ -75,7 +79,7 @@ def GS_PCA_GPU(X, n, epsilon, maxiter=100):
         V_gpu[:, k] = R_gpu[:, k]
         for j in range(maxiter):
           # multiply transpose U[:, k] = R.T@V[:, k]
-            Vk_gpu = gpuarray.empty((N,), dtype=np.float32)
+            Vk_gpu = gpuarray.empty((M,), dtype=np.float32)
             Uk_gpu = gpuarray.empty((N,), dtype=np.float32)
 
             slice_column(U_gpu, Uk_gpu, k, N, n)
@@ -232,9 +236,52 @@ test_set = np.reshape(test_set,(test_set.shape[0],-1))/255
 scaler = StandardScaler()
 scaler.fit(train_set)
 
+rng = np.random.RandomState(1)
+X = np.dot(rng.rand(4, 2), rng.randn(2, 200)).T
+
+#T, P, R, Lambda, vectL =  GS_PCA_CPU(X,2,1e-3)
+T, P, R, Lambda, vectL =  GS_PCA_CPU(train_set[0:500,],500,1e-3)
+
+projection = np.dot(T,P.T[:,:500])
+
+import pycuda.gpuarray as gpuarray
+import numpy as np
+import skcuda.linalg as linalg
+from skcuda.linalg import PCA as cuPCA
 
 
-T, P, R, Lambda, vectL =  GS_PCA_CPU(train_set[0:1],10,1)
 
 
-#T, P, R, Lambda, vectL =  GS_PCA_GPU(train_set[0:10],20,1e-3)
+pca = cuPCA(20)
+X = train_set[0:500,].astype('double')
+X_gpu = gpuarray.to_gpu(X)
+T_gpu = pca.fit_transform(X_gpu)
+dot_product = linalg.dot(T_gpu[:, 0].copy(), T_gpu[:, 1].copy())
+
+
+# now get the variance of each eigenvector so we can see the percent explained by the first two
+std_vec = np.std(T_gpu.get(), axis=0)
+T = T_gpu.get()  # The principal components are not in descending order
+T_2 = T[:,(-std_vec).argsort()[:20].tolist()]
+std_vec = np.std(T_2, axis=0)
+print("We explained " + str(100 * np.sum(std_vec[:20]) / np.sum(std_vec)) + "% of the variance with 500 principal components " )
+explained_ratio = std_vec / np.sum(std_vec)
+print(100 * explained_ratio[:20])
+
+
+
+# var = []
+# for i in range(T.shape[1]):
+#     var.append(np.var(T[i]))
+# var = np.array(var)
+
+#T_g, P_g, R_g, Lambda_g, vectL_g =  GS_PCA_GPU(train_set[0:500,],500,1e-3)
+
+# R = [[0.40348195], [0.38658295], [0.82931052]]
+# V = [0.33452744, 0.33823673, 0.32723583]
+# print("Rt_p: ", R)
+# B = np.matmul(V, np.array(R)) / pow(np.linalg.norm(R), 2)
+# print("B", B)
+#
+# (1, 3)
+

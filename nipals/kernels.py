@@ -37,7 +37,7 @@ def multiply_transpose(X_gpu, th_gpu, ph_gpu, M, N):
     mult_transpose_gpu(X_gpu, th_gpu, ph_gpu,
                        block=block_size, grid=grid_size)
 
-    dum = X_gpu.get().T @ th_gpu.get()
+    dum = X_gpu.get().T @ th_gpu.get() # X_gpu.get().T.shape=(784,500); th_gpu.get().shape=(500,)
     # np.testing.assert_allclose(ph_gpu.get(), dum)
 
     return ph_gpu

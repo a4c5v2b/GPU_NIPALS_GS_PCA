@@ -35,6 +35,7 @@ class TestNipalsGPU(unittest.TestCase):
         ph_gpu = multiply_transpose(X_gpu, th_gpu, ph_gpu, N, M)
 
         npt.assert_allclose(X.T @ th, ph_gpu.get(), rtol=1e-2)
+        print(ph_gpu.get())
 
     def test_norm2(self):
         ph = np.random.randn(N).astype(np.float32)
