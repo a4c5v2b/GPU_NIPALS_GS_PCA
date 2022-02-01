@@ -18,9 +18,8 @@ Old version of skcuda
 # linalg.dot(T_gpu[:,0], T_gpu[:,1])
 
 
+#From https://github.com/lebedov/scikit-cuda/blob/master/demos/pca_demo.py
 
-
-# From https://github.com/lebedov/scikit-cuda/blob/master/demos/pca_demo.py
 import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
@@ -108,3 +107,21 @@ for i in range(len(demo_types)):
 
 
 
+
+
+# import numpy as np
+# import pycuda.gpuarray as gpuarray
+# import pycuda.autoinit
+# import skcuda.linalg as sklin
+#
+# a = np.random.randn(4, 4).astype(np.float32) #为了后续GPU上的计算顺利进行，矩阵数值设定为float32
+# b = np.random.randn(4, 4).astype(np.float32)
+#
+# a_gpu = gpuarray.to_gpu(a)
+# b_gpu = gpuarray.to_gpu(b)
+#
+# sklin.init()   # 使用skcuda线性代数库时要先调用内置函数进行初始化
+# multi_gpu = sklin.dot(a_gpu, b_gpu)  # 矩阵乘法
+# a_inv = sklin.inv(a_gpu)  # 矩阵求逆
+# multi = multi_gpu.get()
+# inv = a_inv.get()

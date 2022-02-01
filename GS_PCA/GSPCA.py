@@ -246,8 +246,8 @@ projection = np.dot(T,P.T[:,:500])
 
 import pycuda.gpuarray as gpuarray
 import numpy as np
-import skcuda.linalg as linalg
-from skcuda.linalg import PCA as cuPCA
+import skcuda_test.linalg as linalg
+from skcuda_test.linalg import PCA as cuPCA
 
 
 
